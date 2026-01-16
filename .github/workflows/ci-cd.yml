@@ -50,7 +50,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: kube-zip
-          path: k8s-manifests.zip
+          path: DingCeliveWordpress.zip
 
   deploy:
     name: Upload FTP 
@@ -61,7 +61,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: kube-zip
-
+          path: DingCeliveWordpress.zip
       - name: Upload sur FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
