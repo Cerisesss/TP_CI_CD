@@ -8,24 +8,20 @@ on:
 jobs:
   validate:
     name: Validation docker-compose
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - name: Vérifier docker-compose
-        run: |
-          docker compose config
+        run: docker compose config
 
   generate:
     name: Génération manifestes Kubernetes
     needs: validate
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - name: Installer Kompose
-        run: |
-          curl -L https://github.com/kubernetes/kompose/releases/download/v1.32.0/kompose-linux-amd64 -o kompose
-          chmod +x kompose
-          sudo mv kompose /usr/local/bin/kompose
+        run: curl -L https://github.com/kubernetes/kompose/releases/download/v1.32.0/kompose-windows-amd64.exe -o kompose.exe
 
       - name: Convertir docker-compose to k8s
         run: |
@@ -41,7 +37,7 @@ jobs:
   package:
     name: Packaging ZIP
     needs: generate
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -49,8 +45,7 @@ jobs:
           path: k8s
 
       - name: Création archive
-        run: |
-          zip -r k8s-manifests.zip k8s
+        run: powershell Compress-Archive -Path k8s\* -DestinationPath k8s-manifests.zip
 
       - uses: actions/upload-artifact@v4
         with:
@@ -60,7 +55,7 @@ jobs:
   deploy:
     name: Upload FTP 
     needs: package
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/download-artifact@v4
