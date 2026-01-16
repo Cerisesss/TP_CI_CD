@@ -61,7 +61,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: kube-zip
-          path: DingCeliveWordpress.zip
+          path: ./
       - name: Upload sur FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
