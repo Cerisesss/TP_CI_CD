@@ -26,7 +26,7 @@ jobs:
       - name: Convertir docker-compose to k8s
         run: |
           mkdir k8s
-          kompose convert -o k8s/
+          .\kompose.exe convert -o k8s\
 
       - name: Sauvegarder manifestes
         uses: actions/upload-artifact@v4
