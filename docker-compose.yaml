@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8
+    secrets:
+      - mysql_root_password
+      - mysql_wp_password
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_wp_password
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wp
+    volumes:
+      - db_data:/var/lib/mysql
+
+  wordpress:
+    image: wordpress:6.4
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD_FILE: /run/secrets/mysql_wp_password
+      WORDPRESS_DB_NAME: wordpress
+    secrets:
+      - mysql_wp_password
+    depends_on:
+      - db
+
+secrets:
+  mysql_root_password:
+    external: true
+  mysql_wp_password:
+    external: true
+
+volumes:
+  db_data:

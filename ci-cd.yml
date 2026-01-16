@@ -1,0 +1,77 @@
+name: Data CI/CD Pipeline
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  validate:
+    name: Validation docker-compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vérifier docker-compose
+        run: |
+          docker compose config
+
+  generate:
+    name: Génération manifestes Kubernetes
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer Kompose
+        run: |
+          curl -L https://github.com/kubernetes/kompose/releases/download/v1.32.0/kompose-linux-amd64 -o kompose
+          chmod +x kompose
+          sudo mv kompose /usr/local/bin/kompose
+
+      - name: Convertir docker-compose to k8s
+        run: |
+          mkdir k8s
+          kompose convert -o k8s/
+
+      - name: Sauvegarder manifestes
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8s-manifests
+          path: k8s/
+
+  package:
+    name: Packaging ZIP
+    needs: generate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: k8s-manifests
+          path: k8s
+
+      - name: Création archive
+        run: |
+          zip -r k8s-manifests.zip k8s
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kube-zip
+          path: k8s-manifests.zip
+
+  deploy:
+    name: Upload FTP 
+    needs: package
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: kube-zip
+
+      - name: Upload sur FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: /k8s/
